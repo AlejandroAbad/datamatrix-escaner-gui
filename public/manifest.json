@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Escáner Datamatrix",
+  "name": "Control de Escáner Datamatrix",
   "icons": [
     {
       "src": "favicon.ico",
