@@ -1,4 +1,4 @@
-import { Avatar, Chip, Grid, makeStyles, Paper, Typography } from "@material-ui/core";
+import { Chip, Grid, makeStyles, Paper, Typography } from "@material-ui/core";
 
 
 const useStyles = makeStyles((theme) => ({
@@ -16,7 +16,7 @@ const useStyles = makeStyles((theme) => ({
 	}
 }));
 
-export default function PosicionAlbaran({ ean, cn, descripcion, lote, caducidad, cantidad, leidos }) {
+export default function PosicionAlbaran({ ean, cn, descripcion, lote, caducidad, eanAdmitidos, cantidad, leidos }) {
 
 	let classes = useStyles();
 
@@ -27,10 +27,15 @@ export default function PosicionAlbaran({ ean, cn, descripcion, lote, caducidad,
 					<Typography component="h2" variant="h6" color="primary" >
 						{descripcion}
 					</Typography>
-					<Typography variant="subtitle1" display="block" className={classes.chips}>
-						<Chip avatar={<Avatar>E</Avatar>} label={ean.substring(5, 18)} variant="outlined" color="primary" />
-						<Chip avatar={<Avatar>L</Avatar>} label={lote} variant="outlined" color="primary" />
-						<Chip avatar={<Avatar>C</Avatar>} label={caducidad} variant="outlined" disabled />
+					<Typography variant="subtitle1" display="block" color="textSecondary">
+						Lote/Cad: <Chip size="small" label={lote} variant="outlined" color="secondary" />
+						<Chip size="small" label={caducidad} variant="outlined" color="secondary" />
+					</Typography>
+					<Typography variant="subtitle1" display="block" color="textSecondary">
+						Códigos admitidos:
+					</Typography>
+					<Typography variant="subtitle1" display="block" color="textSecondary">
+						{eanAdmitidos.map(ean => <Chip key={ean} size="small" label={ean} variant="outlined" color="primary" />)}
 					</Typography>
 				</Grid>
 				<Grid item xs={12} sm={4} className={classes.estados}>

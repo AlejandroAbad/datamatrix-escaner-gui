@@ -1,5 +1,5 @@
 import clone from 'clone';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useApiCall } from './useApiCall';
 import useInterval from './useInterval';
 
@@ -31,6 +31,8 @@ const generarParametrosLlamadaSoap = (comando, usuario, password, numeroAlbaran)
 export default function useDrm(vbeln, { baseUrl, usuario, password }) {
 
 	let { post } = useApiCall(baseUrl);
+
+	const [ consultaActiva, setConsultaActiva ] = useState(false);
 
 	const drmGetAlbaranCompleto = useCallback(async () => {
 
@@ -92,7 +94,7 @@ export default function useDrm(vbeln, { baseUrl, usuario, password }) {
 	const _procesarTandaDrm = useCallback((nuevasLecturas, marcarPendienteVerificar) => {
 
 		let nuevosTotales = refTotalLecturasDrm.current;
-
+		
 		for (let lectura in nuevasLecturas) {
 			if (!refAcumuladoLecturasDrm.current[lectura]) {
 				let lecturaNueva = nuevasLecturas[lectura];
@@ -112,7 +114,7 @@ export default function useDrm(vbeln, { baseUrl, usuario, password }) {
 	}, [refTotalLecturasDrm, refLecturasPendienteVerificar]);
 
 	const obtenerUltimaTandaDrm = useCallback(async () => {
-		if (vbeln) {
+		if (vbeln && consultaActiva) {
 			try {
 				refProcesando.current = true;
 				let datosNuevosDrm = await drmGetAlbaranUltimos();
@@ -122,10 +124,10 @@ export default function useDrm(vbeln, { baseUrl, usuario, password }) {
 				console.log('AL obtener UltimaTandaDrm DATOS DEL ESCANER', error);
 			}
 		}
-	}, [vbeln, drmGetAlbaranUltimos, _procesarTandaDrm])
+	}, [consultaActiva, vbeln, drmGetAlbaranUltimos, _procesarTandaDrm])
 
 	const iniciarLecturasDrm = useCallback(async () => {
-		if (vbeln) {
+		if (vbeln && consultaActiva) {
 			try {
 				refProcesando.current = true;
 				await obtenerUltimaTandaDrm();
@@ -136,7 +138,7 @@ export default function useDrm(vbeln, { baseUrl, usuario, password }) {
 				console.log('AL iniciarLecturasDrm DATOS DEL ESCANER', error);
 			}
 		}
-	}, [vbeln, drmGetAlbaranCompleto, _procesarTandaDrm, obtenerUltimaTandaDrm])
+	}, [consultaActiva, vbeln, drmGetAlbaranCompleto, _procesarTandaDrm, obtenerUltimaTandaDrm])
 
 	const obtenerLecturasPendienteVerificar = useCallback(() => {
 		if (refProcesando.current) return []
@@ -164,7 +166,8 @@ export default function useDrm(vbeln, { baseUrl, usuario, password }) {
 		totalLecturasDrm: refTotalLecturasDrm.current,
 		obtenerLecturasPendienteVerificar,
 		iniciarLecturasDrm,
-		obtenerUltimaTandaDrm
+		obtenerUltimaTandaDrm,
+		setConsultaActiva
 	}
 
 

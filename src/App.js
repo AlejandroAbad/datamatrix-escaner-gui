@@ -34,7 +34,7 @@ function App() {
 
 	let { sapGetAlbaran, sapVerificaMateriales } = useSapApiCall(config.sap)
 	let [errores, { empty: limpiarErrores, push: agregarError }] = useArray([]);
-	let { totalLecturasDrm, obtenerLecturasPendienteVerificar, iniciarLecturasDrm } = useDrm(vbeln, config.drm);
+	let { totalLecturasDrm, obtenerLecturasPendienteVerificar, iniciarLecturasDrm, setConsultaActiva } = useDrm(vbeln, config.drm);
 
 	// **MAESTROS**
 	let [datosAlbaranSap, setDatosAlbaranSap] = useState({ cargando: true, datos: null, error: null });
@@ -49,11 +49,13 @@ function App() {
 
 		if (vbeln) {
 			try {
+				setConsultaActiva(false);
 				setDatosAlbaranSap({ cargando: true, error: null, datos: null });
 				let datosAlbaran = await sapGetAlbaran(vbeln);
 
 				if (datosAlbaran.message) {
 					setDatosAlbaranSap({ cargando: false, error: new Error(datosAlbaran.message), datos: null });
+					
 				} else {
 					/*
 					datosAlbaran.s_positions.push({
@@ -62,6 +64,7 @@ function App() {
 						charg: "1RE0017B",
 						lfimg: 300,
 						matnr: "000008470006867259",
+						t_matnr_ad: [ {"ean11": "000008470006867259"} ]
 					})
 					datosAlbaran.s_positions.push({
 						arktx: "HUEVINA",
@@ -69,15 +72,21 @@ function App() {
 						charg: "1RE00203",
 						lfimg: 100,
 						matnr: "000008470006867259",
+						t_matnr_ad: [ {"ean11": "000008470006867259"} ]
 					})*/
+					datosAlbaran?.s_positions.forEach( posicion => {
+						posicion.codigosMaterialAdmitidos = posicion.t_matnr_ad.map( v => parseInt(v.ean11) );
+					})
+					
 					setDatosAlbaranSap({ cargando: false, error: null, datos: datosAlbaran });
+					setConsultaActiva(true);
 				}
 
 			} catch (error) {
 				setDatosAlbaranSap({ cargando: false, error: error, datos: null });
 			}
 		}
-	}, [vbeln, setDatosAlbaranSap, sapGetAlbaran])
+	}, [setConsultaActiva, vbeln, setDatosAlbaranSap, sapGetAlbaran])
 
 	const verificarLecturas = useCallback(async () => {
 
@@ -96,14 +105,14 @@ function App() {
 				// IDENTIFICAR AQUELLAS QUE NO COINCIDEN CON EL ALBARAN ACTUAL Y ELIMINARLAS
 				lecturasPendientes = lecturasPendientes.filter(lectura => {
 					let encontrado = datosAlbaranSap?.datos.s_positions.find(pos => {
-						return (parseInt(pos.matnr) === lectura.ean && pos.charg === lectura.lote)
+						return (pos.codigosMaterialAdmitidos.includes(lectura.ean) && pos.charg === lectura.lote)
 					})
 					if (!encontrado) {
 						if (!erroresAcumulados) erroresAcumulados = {}
 						if (!erroresAcumulados[lectura.ean]) erroresAcumulados[lectura.ean] = {};
 						if (!erroresAcumulados[lectura.ean][lectura.lote]) erroresAcumulados[lectura.ean][lectura.lote] = 0;
 						erroresAcumulados[lectura.ean][lectura.lote]++;
-					}
+					} 
 					return encontrado;
 				})
 				if (erroresAcumulados) {
@@ -163,7 +172,6 @@ function App() {
 	useInterval(verificarLecturas, 1000)
 
 	// PINTA Y COLOREA
-
 	let datos = datosAlbaranSap?.datos;
 
 	if (!vbeln) {
