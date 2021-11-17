@@ -32,7 +32,7 @@ export default function useDrm(vbeln, { baseUrl, usuario, password }) {
 
 	let { post } = useApiCall(baseUrl);
 
-	const [ consultaActiva, setConsultaActiva ] = useState(false);
+	const [consultaActiva, setConsultaActiva] = useState(false);
 
 	const drmGetAlbaranCompleto = useCallback(async () => {
 
@@ -94,7 +94,7 @@ export default function useDrm(vbeln, { baseUrl, usuario, password }) {
 	const _procesarTandaDrm = useCallback((nuevasLecturas, marcarPendienteVerificar) => {
 
 		let nuevosTotales = refTotalLecturasDrm.current;
-		
+
 		for (let lectura in nuevasLecturas) {
 			if (!refAcumuladoLecturasDrm.current[lectura]) {
 				let lecturaNueva = nuevasLecturas[lectura];

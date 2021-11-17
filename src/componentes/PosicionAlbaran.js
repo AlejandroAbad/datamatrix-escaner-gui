@@ -27,10 +27,16 @@ export default function PosicionAlbaran({ ean, cn, descripcion, lote, caducidad,
 					<Typography component="h2" variant="h6" color="primary" >
 						{descripcion}
 					</Typography>
-					<Typography variant="subtitle1" display="block" color="textSecondary">
-						Lote/Cad: <Chip size="small" label={lote} variant="outlined" color="secondary" />
-						<Chip size="small" label={caducidad} variant="outlined" color="secondary" />
-					</Typography>
+					{lote === '*' ?
+						<Typography variant="subtitle1" display="block" color="textSecondary">
+							Se admite cualquier lote
+						</Typography>
+						:
+						<Typography variant="subtitle1" display="block" color="textSecondary">
+							Lote/Cad: <Chip size="small" label={lote} variant="outlined" color="secondary" />
+							<Chip size="small" label={caducidad} variant="outlined" color="secondary" />
+						</Typography>
+					}
 					<Typography variant="subtitle1" display="block" color="textSecondary">
 						Códigos admitidos:
 					</Typography>

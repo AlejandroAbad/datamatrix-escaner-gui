@@ -18,7 +18,7 @@ function App() {
 
 	let [config/*, setConfig*/] = useState({
 		sap: {
-			baseUrl: 'https://p01-ws.hefame.es/api',
+			baseUrl: 'https://t01-ws.hefame.es/api',
 			usuario: 'interno',
 			password: '64v1R14.$'
 		},
@@ -40,6 +40,9 @@ function App() {
 	let [datosAlbaranSap, setDatosAlbaranSap] = useState({ cargando: true, datos: null, error: null });
 
 
+	console.log(datosAlbaranSap)
+	console.log(totalLecturasDrm)
+
 
 
 	let [verificando, setVerificando] = useState(0);
@@ -52,29 +55,24 @@ function App() {
 				setConsultaActiva(false);
 				setDatosAlbaranSap({ cargando: true, error: null, datos: null });
 				let datosAlbaran = await sapGetAlbaran(vbeln);
+				console.log.apply(datosAlbaran);
 
 				if (datosAlbaran.message) {
 					setDatosAlbaranSap({ cargando: false, error: new Error(datosAlbaran.message), datos: null });
 					
 				} else {
-					/*
+					
 					datosAlbaran.s_positions.push({
 						arktx: "HUEVINA",
 						bismt: "686725",
-						charg: "1RE0017B",
+						charg: "*",
 						lfimg: 300,
-						matnr: "000008470006867259",
-						t_matnr_ad: [ {"ean11": "000008470006867259"} ]
+						matnr: "000008435232348408",
+						t_matnr_ad: [ {"ean11": "000008435232348408"} ]
 					})
-					datosAlbaran.s_positions.push({
-						arktx: "HUEVINA",
-						bismt: "686725",
-						charg: "1RE00203",
-						lfimg: 100,
-						matnr: "000008470006867259",
-						t_matnr_ad: [ {"ean11": "000008470006867259"} ]
-					})*/
+					
 					datosAlbaran?.s_positions.forEach( posicion => {
+						if (!posicion.charg) posicion.charg = '*'
 						posicion.codigosMaterialAdmitidos = posicion.t_matnr_ad.map( v => parseInt(v.ean11) );
 					})
 					
@@ -105,8 +103,9 @@ function App() {
 				// IDENTIFICAR AQUELLAS QUE NO COINCIDEN CON EL ALBARAN ACTUAL Y ELIMINARLAS
 				lecturasPendientes = lecturasPendientes.filter(lectura => {
 					let encontrado = datosAlbaranSap?.datos.s_positions.find(pos => {
-						return (pos.codigosMaterialAdmitidos.includes(lectura.ean) && pos.charg === lectura.lote)
+						return (pos.codigosMaterialAdmitidos.includes(lectura.ean) && (pos.charg === lectura.lote || pos.charg === '*'))
 					})
+
 					if (!encontrado) {
 						if (!erroresAcumulados) erroresAcumulados = {}
 						if (!erroresAcumulados[lectura.ean]) erroresAcumulados[lectura.ean] = {};
@@ -127,8 +126,14 @@ function App() {
 				// VERIFICAR LAS SUPERVIVIENTES CONTRA SAP
 
 				if (lecturasPendientes.length) {
-					let resultadoVerificacion = await sapVerificaMateriales(vbeln, datosAlbaranSap.datos.werks, lecturasPendientes)
-					
+
+					let vbelnSaneado = vbeln;
+					if (vbelnSaneado.startsWith('E')) {
+						vbelnSaneado = vbelnSaneado.slice(1);
+					}
+
+					let resultadoVerificacion = await sapVerificaMateriales(vbelnSaneado, datosAlbaranSap.datos.werks, lecturasPendientes)
+
 					if (resultadoVerificacion.message) {
 						agregarError(`Error al llamar a SAP: ${resultadoVerificacion?.message}`)
 					} else {
