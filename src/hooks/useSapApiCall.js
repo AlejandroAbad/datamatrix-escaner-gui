@@ -50,7 +50,7 @@ export default function useSapApiCall({ baseUrl, usuario, password }) {
 					werks: werks,
 					s_positions: posiciones.slice(i, i + POSICIONES_POR_TANDA).map(pos => {
 						return {
-							matnr: '0' + pos.ean,
+							matnr: pos.ean.padStart(14, '0'),
 							charg: pos.lote,
 							vfdat: '20' + pos.caducidad, // El efecto 2100 nos va a matar
 							serial: pos.serie,
